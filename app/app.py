@@ -6,7 +6,7 @@ import tiktoken
 import pandas as pd
 import matplotlib.pyplot as plt
 
-BASE_URL = "http://127.0.0.1:8000"
+BASE_URL = "https://api-695260164759.us-central1.run.app"
 
 # Sidebar Navigation
 st.sidebar.title("Navigation")
