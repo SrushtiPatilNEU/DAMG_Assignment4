@@ -152,7 +152,7 @@ async def get_markdowns():
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"❌ Failed to list Markdown files from S3: {str(e)}")
 
-
+'''
 @app.get("/download_markdown/{filename}")
 async def download_markdown(filename: str):
     """Download the extracted markdown file."""
@@ -160,6 +160,24 @@ async def download_markdown(filename: str):
     if os.path.exists(file_path):
         return FileResponse(file_path, filename=filename)
     return JSONResponse(content={"error": "File not found"}, status_code=404)
+'''
+
+@app.get("/download_markdown/{filename}")
+async def download_markdown(filename: str):
+    """Download the extracted markdown file from S3."""
+    try:
+        # Set the S3 path to download from
+        s3_path = f"new_upload/markdown/{filename}"
+        
+        # Use a temporary download from S3 if the file isn't locally present
+        tmp_file_path = os.path.join(MARKDOWN_DIR, filename)
+        s3_client.download_file(S3_BUCKET_NAME, s3_path, tmp_file_path)
+
+        return FileResponse(tmp_file_path, filename=filename)
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=f"❌ File not found in S3: {str(e)}")
+    
+    
 def read_file_content(file_path):
     """Reads and returns the content of a markdown file."""
     if not os.path.exists(file_path):
@@ -172,6 +190,7 @@ def read_file_content(file_path):
         raise HTTPException(status_code=400, detail=f"❌ Error: {file_path} is empty.")
 
     return content
+
 @app.post("/summarize/")
 async def summarize(pdf_name: str = Form(...), llm: str = Form(...)):
     """Download file from S3 if not available locally, then process it."""

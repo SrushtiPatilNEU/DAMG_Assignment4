@@ -47,12 +47,13 @@ STREAM_NAME = "llm_requests"
 # LLM model configurations with appropriate keys and provider info
 LLM_MODELS = {
     "GPT-4o": {"model": "gpt-4o", "api_key": os.getenv("GPT4o_API_KEY")},  
-    "Gemini-Flash": {"model": "gemini-2.0-flash-exp", "api_key": os.getenv("GEMINI_API_KEY"), "provider": "google"},
+    "Gemini-Flash": {"model": "gemini/gemini-2.0-flash-exp", "api_key": os.getenv("GEMINI_API_KEY"), "provider": "google"},
     "DeepSeek": {"model": "deepseek/deepseek-chat", "api_key": os.getenv("DEEPSEEK_API_KEY"), "provider": "deepseek"},
     "Claude": {"model": "claude-3-5-sonnet-20240620", "api_key": os.getenv("CLAUDE_API_KEY")},  
     "Grok": {"model": "xai/grok-2-1212", "api_key": os.getenv("GROK_API_KEY"), "provider": "grok"}
 }
 
+'''
 
 def setup_google_credentials():
     """Set up Google Cloud credentials from a GCP bucket."""
@@ -88,6 +89,7 @@ def setup_google_credentials():
     except Exception as e:
         logger.error(f"Failed to set up Google credentials: {str(e)}")
         return None
+'''
 
 def call_llm(llm_name, prompt):
     """Send a request to the selected LLM model using LiteLLM."""
@@ -99,10 +101,12 @@ def call_llm(llm_name, prompt):
     try:
         # Handle Gemini model specifically
         if llm_name == "Gemini-Flash":
+            '''
             # Make sure Google credentials are set up
             credentials_path = setup_google_credentials()
             if not credentials_path:
-                return f"❌ Error: Failed to set up Google credentials for {llm_name}"
+                return f"❌ Error: Failed to set up Google credentials for {llm_name}"'
+            '''
                 
             # Use the standard Google authentication method
             response = litellm.completion(
@@ -197,8 +201,10 @@ def process_redis_messages():
             time.sleep(2)
 
 # Setup Google credentials at startup
+'''
 if "Gemini-Flash" in LLM_MODELS:
-    setup_google_credentials()
+    setup_google_credentials()'
+'''
 
 # Run the Redis worker in a background thread
 thread = Thread(target=process_redis_messages)
