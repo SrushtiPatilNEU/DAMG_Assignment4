@@ -1,4 +1,3 @@
-
 import streamlit as st
 import requests
 import time
@@ -7,6 +6,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 BASE_URL = "https://api-695260164759.us-central1.run.app"
+##BASE_URL = "http://127.0.0.1:8000"
 
 # Sidebar Navigation
 st.sidebar.title("Navigation")
@@ -78,7 +78,7 @@ if selected_tab == "Extraction":
         st.text_area("Extracted Text", st.session_state["extracted_text"], height=300)
 # **🤖 LLM Processing Tab**
 elif selected_tab == "LLM Processing":
-    st.title("🤖 LLM Document Processing")
+    st.title("LLM Document Processing")
 
     # 1️⃣ **Model Selection**
     st.markdown("<h2 style='text-align: center; color: Black;'>Select Model</h2>", unsafe_allow_html=True)
@@ -321,7 +321,11 @@ elif selected_tab == "LLM Processing":
         st.session_state["prev_file"] = selected_markdown
     if "prev_question" not in st.session_state:
         st.session_state["prev_question"] = ""
- 
+    
+    if model != st.session_state["prev_model"]:
+        st.session_state["summary"] = None  # Clear summary
+        st.session_state["prev_model"] = model  # Update the tracking model
+        st.rerun()
 
     # ✅ If the user selects a new model or file, reset session state
     if model != st.session_state["prev_model"] or selected_markdown != st.session_state["prev_file"] or st.session_state["prev_question"] != question:
@@ -335,5 +339,4 @@ elif selected_tab == "LLM Processing":
         st.session_state["prev_model"] = model
         st.session_state["prev_file"] = selected_markdown
         st.session_state["prev_question"] = question
-        # ✅ Force a rerun of the Streamlit app to reflect the reset state
         st.rerun() 
