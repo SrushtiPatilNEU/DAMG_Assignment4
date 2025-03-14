@@ -10,6 +10,8 @@ import logging
 from fastapi import FastAPI
 import uvicorn
 from threading import Thread
+from google.cloud import storage
+
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -51,12 +53,14 @@ LLM_MODELS = {
     "Grok": {"model": "xai/grok-2-1212", "api_key": os.getenv("GROK_API_KEY"), "provider": "grok"}
 }
 
-def setup_google_credentials():
-    """Set up Google Cloud credentials from environment variable."""
-    google_credentials_json = os.getenv("GOOGLE_CREDENTIALS_JSON")
 
-    if not google_credentials_json:
-        logger.error("GOOGLE_CREDENTIALS_JSON not found in environment variables.")
+def setup_google_credentials():
+    """Set up Google Cloud credentials from a GCP bucket."""
+    bucket_name = os.getenv("GCP_BUCKET_NAME")
+    credentials_filename = os.getenv("GCP_CREDENTIALS_JSON_FILENAME")
+    
+    if not bucket_name or not credentials_filename:
+        logger.error("GCP_BUCKET_NAME or GCP_CREDENTIALS_JSON_FILENAME not found in environment variables.")
         return None
 
     try:
@@ -67,12 +71,16 @@ def setup_google_credentials():
         # Path to credentials file
         credentials_path = f"{credentials_dir}/google-credentials.json"
         
-        # Write credentials to file
-        logger.info(f"Writing Google credentials to {credentials_path}")
-        with open(credentials_path, 'w') as f:
-            f.write(google_credentials_json)
+        # Initialize the Google Cloud Storage client
+        storage_client = storage.Client()
         
-        # Set environment variable for Google authentication
+        # Download the credentials file from the bucket
+        logger.info(f"Downloading Google credentials from bucket {bucket_name} to {credentials_path}")
+        bucket = storage_client.get_bucket(bucket_name)
+        blob = bucket.blob(credentials_filename)
+        blob.download_to_filename(credentials_path)
+
+        # Set the environment variable for Google authentication
         os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = credentials_path
         logger.info(f"Set GOOGLE_APPLICATION_CREDENTIALS to {credentials_path}")
         
