@@ -39,7 +39,6 @@ MODEL_PRICING = {
     "Grok": {"input_price": 2.00, "output_price": 10.00}
 }
 
-
 # **Extraction Tab**
 if selected_tab == "Extraction":
     st.title("Extract Text from PDF")
@@ -47,35 +46,36 @@ if selected_tab == "Extraction":
     uploaded_file = st.file_uploader("Upload a PDF ", type="pdf", key="pdf_extraction")
 
     if uploaded_file:
-     if st.button("Extract Text ", use_container_width=True):
-        with st.spinner(" Extracting text from PDF..."):
-            files = {"file": (uploaded_file.name, uploaded_file.getvalue(), "application/pdf")}
-            response = requests.post(f"{BASE_URL}/upload_pdf/", files=files)
+        if st.button("Extract Text ", use_container_width=True):
+            with st.spinner(" Extracting text from PDF..."):
+                files = {"file": (uploaded_file.name, uploaded_file.getvalue(), "application/pdf")}
+                response = requests.post(f"{BASE_URL}/upload_pdf/", files=files)
 
-            if response.status_code == 200:
-                scraped_file = response.json()["filename"]
-                s3_url = response.json()["s3_url"]  # ✅ Get S3 URL
-                st.success(f" PDF extracted! Saved as `{scraped_file}` in S3.")
+                if response.status_code == 200:
+                    scraped_file = response.json()["filename"]
+                    s3_url = response.json()["s3_url"]  # ✅ Get S3 URL
+                    st.success(f" PDF extracted! Saved as `{scraped_file}` in S3.")
 
-                # 🔍 Debug: Display S3 URL
-                st.write(f"S3 File URL: {s3_url}")
+                    # 🔍 Debug: Display S3 URL
+                    st.write(f"S3 File URL: {s3_url}")
 
-                # ✅ Fetch Extracted Text from FastAPI
-                text_response = requests.get(f"{BASE_URL}/get_extracted_text/{scraped_file}")
+                    # ✅ Fetch Extracted Text from FastAPI
+                    text_response = requests.get(f"{BASE_URL}/get_extracted_text/{scraped_file}")
 
-                if text_response.status_code == 200:
-                    extracted_text = text_response.json()["extracted_text"]
-                    st.session_state["extracted_text"] = extracted_text
+                    if text_response.status_code == 200:
+                        extracted_text = text_response.json()["extracted_text"]
+                        st.session_state["extracted_text"] = extracted_text
+                    else:
+                        st.error(f"❌ Failed to retrieve extracted text. Error Code: {text_response.status_code}")
+
                 else:
-                    st.error(f"❌ Failed to retrieve extracted text. Error Code: {text_response.status_code}")
+                    st.error(f"❌ Upload failed: {response.text}")
 
-            else:
-                st.error(f"❌ Upload failed: {response.text}")
-
-# ✅ Show Extracted Text
+    # ✅ Show Extracted Text
     if "extracted_text" in st.session_state:
         st.markdown("### Extracted Text:")
         st.text_area("Extracted Text", st.session_state["extracted_text"], height=300)
+
 # **🤖 LLM Processing Tab**
 elif selected_tab == "LLM Processing":
     st.title("🤖 LLM Document Processing")
@@ -114,7 +114,7 @@ elif selected_tab == "LLM Processing":
             response = requests.post(
                 f"{BASE_URL}/summarize/",
                 data={"pdf_name": selected_markdown, "llm": model}
-        )
+            )
 
         if response.status_code == 200:
             task_id = response.json().get("task_id")
@@ -140,21 +140,21 @@ elif selected_tab == "LLM Processing":
         else:
             st.error(f" Summarization request failed: {response.text}")
     
-    
-# ✅ Display stored summary even after refresh
+    # ✅ Display stored summary even after refresh
     if st.session_state["summary"]:
         st.markdown("<h3 style='text-align: center; color: black;'>Summarization Result:</h3>", unsafe_allow_html=True)
         st.write(st.session_state["summary"])
-# ✅ Ensure session state has "answer" key
+
+    # ✅ Ensure session state has "answer" key
     if "answer" not in st.session_state:
         st.session_state["answer"] = None
 
     st.markdown("<h2 style='text-align: center; color: black;'>Ask a Question</h2>", unsafe_allow_html=True)
 
-# ✅ Use st.text_input() instead of st.text_area() so Enter submits automatically
+    # ✅ Use st.text_input() instead of st.text_area() so Enter submits automatically
     question = st.text_input("Enter your question and press Enter:")
 
-# ✅ Create an empty placeholder for answer display
+    # ✅ Create an empty placeholder for answer display
     answer_placeholder = st.empty()
     
     if selected_markdown and question and st.button("Get Answer 💡", use_container_width=True):
@@ -162,7 +162,7 @@ elif selected_tab == "LLM Processing":
             response = requests.post(
                 f"{BASE_URL}/ask_question/",
                 data={"pdf_name": selected_markdown, "llm": model, "question": question}
-        )
+            )
 
         if response.status_code == 200:
             task_id = response.json().get("task_id")
@@ -179,14 +179,15 @@ elif selected_tab == "LLM Processing":
         else:
             st.error(f" Failed to submit question request: {response.text}")
      
-     # ✅ Display stored answer without affecting summary
+    # ✅ Display stored answer without affecting summary
     if st.session_state["answer"]:
-
         answer_placeholder.write(st.session_state["answer"])
 
+    # **Fetch the file content and debug the URL**
     if selected_markdown:
-    # Fetch the file content
-        file_response = requests.get(f"{BASE_URL}/download_markdown/{selected_markdown}")
+        file_url = f"{BASE_URL}/download_markdown/{selected_markdown}"
+        st.write(f"Trying to fetch file content from: {file_url}")  # Debugging URL
+        file_response = requests.get(file_url)
 
         if file_response.status_code == 200:
             file_content = file_response.text
@@ -194,13 +195,14 @@ elif selected_tab == "LLM Processing":
             st.session_state["pdf_token_count"] = pdf_token_count
         else:
             st.session_state["pdf_token_count"] = 0
-            st.error(" Failed to fetch file content.")
+            st.error(f"❌ Failed to fetch file content. Status code: {file_response.status_code}")
+            st.write(f"Response: {file_response.text}")  # Show response text for debugging
 
-# ✅ Display token count for the selected PDF
+    # ✅ Display token count for the selected PDF
     if "pdf_token_count" in st.session_state:
         st.markdown(f" **Token Count for Selected PDF**: {st.session_state['pdf_token_count']} tokens")
 
-# ✅ Display stored summary even after refresh
+    # ✅ Display stored summary even after refresh
     if st.session_state["summary"]:
         summary_token_count = count_tokens(st.session_state["summary"], model)  # ✅ Model-aware token count
         st.session_state["summary_token_count"] = summary_token_count
@@ -219,7 +221,6 @@ elif selected_tab == "LLM Processing":
         st.markdown(f" **Token Count for Answer**: {st.session_state['answer_token_count']} tokens")
 
     if selected_markdown and model:
-    # Fetch the file content only when both file and model are selected
         file_response = requests.get(f"{BASE_URL}/download_markdown/{selected_markdown}")
 
         if file_response.status_code == 200:
@@ -234,7 +235,6 @@ elif selected_tab == "LLM Processing":
         pdf_price = (st.session_state["pdf_token_count"] / 1_000_000) * MODEL_PRICING[model]["input_price"]
         st.markdown(f" **Cost for pdf:** ${pdf_price:.5f}")
 
-
     if question and model:
         question_token_count = count_tokens(question, model)  # ✅ Count question tokens per model
         st.session_state["question_token_count"] = question_token_count
@@ -242,13 +242,11 @@ elif selected_tab == "LLM Processing":
         
         st.markdown(f"**Cost for Question:** ${question_price:.5f}")
 
-    # ✅ Display stored summary even after refresh
     if st.session_state["summary"]:
         summary_token_count = count_tokens(st.session_state["summary"], model)  # ✅ Model-aware token count
         st.session_state["summary_token_count"] = summary_token_count
         summary_price = (summary_token_count / 1_000_000) * MODEL_PRICING[model]["output_price"]
         st.markdown(f"**Cost for Summarisation:** ${summary_price:.5f}")
-
 
     if st.session_state["answer"]:
         answer_token_count = count_tokens(st.session_state["answer"], model)  # ✅ Count answer tokens per model
@@ -295,45 +293,21 @@ elif selected_tab == "LLM Processing":
         st.markdown("### **Total Token Usage & Cost (Based on 1M Token Pricing)**")
         st.table(cost_data)
 
-
     # ✅ Create a bar chart for token usage
     if selected_markdown and model:
         fig, ax = plt.subplots(figsize=(8, 5))
         labels = ["PDF Tokens", "Summary Tokens", "Question Tokens", "Answer Tokens"]
         values = [
-            st.session_state.get("pdf_token_count", 0),
-            st.session_state.get("summary_token_count", 0),
+            total_input_tokens if total_input_tokens > 0 else 0,
+            total_output_tokens if total_output_tokens > 0 else 0,
             st.session_state.get("question_token_count", 0),
-            st.session_state.get("answer_token_count", 0),
+            st.session_state.get("answer_token_count", 0)
         ]
-        ax.bar(labels, values)
+
+        ax.bar(labels, values, color=["#FF6347", "#87CEEB", "#32CD32", "#FFD700"])
+        ax.set_xlabel("Token Categories")
         ax.set_ylabel("Token Count")
-        ax.set_title("Token Usage Breakdown")
+        ax.set_title(f"Token Usage for {selected_markdown}")
 
-        # ✅ Display the chart in Streamlit
+        # Show the bar chart in Streamlit
         st.pyplot(fig)
-
-    # ✅ Reset stored values when the user changes the model or file
-    if "prev_model" not in st.session_state:
-        st.session_state["prev_model"] = model
-
-    if "prev_file" not in st.session_state:
-        st.session_state["prev_file"] = selected_markdown
-    if "prev_question" not in st.session_state:
-        st.session_state["prev_question"] = ""
- 
-
-    # ✅ If the user selects a new model or file, reset session state
-    if model != st.session_state["prev_model"] or selected_markdown != st.session_state["prev_file"] or st.session_state["prev_question"] != question:
-        
-        st.session_state["answer"] = None
-        st.session_state["question"] = ""
-        st.session_state["question_token_count"] = 0
-        st.session_state["summary_token_count"] = 0
-        st.session_state["answer_token_count"] = 0
-        st.session_state["pdf_token_count"] = 0
-        st.session_state["prev_model"] = model
-        st.session_state["prev_file"] = selected_markdown
-        st.session_state["prev_question"] = question
-        # ✅ Force a rerun of the Streamlit app to reflect the reset state
-        st.rerun() 
