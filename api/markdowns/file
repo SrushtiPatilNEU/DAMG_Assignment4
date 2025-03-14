@@ -1,0 +1,93 @@
+ 
+INFO5100: Application Engineering &  Development 
+ReguPharm :Drug Development Lifecycle Management System 
+Project Proposal Presented By: 
+Group 20 
+Vasu Vinodbhai Bhut (002059499) 
+Vartika Singh (002317924) 
+Parva Pareshkumar Mehta (002330173) 
+Srushti Sunil Patil (002345025) 
+Approved 
+Approver : Adwait Mahendra Changan 
+               
+Table of contents  
+1. Problem Statement 
+0 
+2. Proposed Solution 
+5 
+3. High Level Component Diagram 
+8 
+4. EcoSystem Structure 
+9 
+5. Use Case Overview 
+14 
+ 
+1. Problem Statement 
+The drug development cycle is a critical yet intricate process aimed at delivering safe and effective 
+treatments for various medical conditions. This life cycle includes multiple phases, such as drug 
+discovery, preclinical and clinical testing, regulatory approvals, and post-market safety monitoring. 
+Each phase involves a wide range of stakeholders, including research scientists, clinical researchers, 
+manufacturing analysts, regulatory officers, safety inspectors, and advertising specialists, working 
+across different enterprises and organizations. However, despite the process’s importance, it is plagued 
+by several inefficiencies and challenges that hinder its overall effectiveness and slow the delivery of 
+critical drugs to the market. 
+Challenges in the Drug Development Process: 
+1. Fragmented Collaboration Across Stages: 
+The absence of an integrated platform results in isolated operations, making it challenging for 
+stakeholders to work cohesively. This fragmentation leads to: 
+● Miscommunication between teams handling discovery, testing, and regulatory review. 
+
+1 
+● Delays in transferring data or tasks between stages. 
+● Inefficiencies caused by a lack of shared visibility and understanding across the lifecycle. 
+2. Data Management Challenges: 
+The vast volume of data generated at every stage of the drug lifecycle creates significant management 
+hurdles. The lack of a centralized system results in: 
+● Data redundancy, loss, and inconsistencies, affecting the accuracy of research findings and 
+reports. 
+● Difficulty in consolidating and validating critical information like drug composition, trial 
+results, and compliance documents. 
+● Inefficient record-keeping, increasing the risk of errors and missed opportunities for 
+improvement. 
+3. Limited Visibility and Feedback Mechanisms: 
+Without real-time progress tracking, teams struggle to identify bottlenecks or take corrective actions in 
+a timely manner. Key issues include: 
+● A lack of status transparency across stages, causing unnecessary delays and confusion. 
+● Inefficient feedback loops, which hamper collaboration and the ability to resolve issues 
+proactively. 
+● Stakeholders lack actionable insights to guide their work and ensure alignment with project 
+goals. 
+4. Regulatory Compliance Complexities: 
+Adhering to ever-evolving regulatory standards, such as Good Laboratory Practices (GLP) and FDA 
+guidelines, poses significant challenges, including: 
+● Time-intensive audits and inspections due to poor record-keeping and inadequate tracking 
+systems. 
+● High risk of non-compliance due to manual processes, leading to rejections or delays in 
+approvals. 
+● Lack of seamless integration with regulatory authorities to facilitate quicker reviews and 
+approvals. 
+5. Resource Allocation Constraints: 
+Managing large teams of researchers, analysts, and regulatory personnel across stages is challenging. 
+This results in: 
+● Poor resource utilization, with effort wasted on redundant or non-priority tasks. 
+● Difficulties in tracking contributions and performance across distributed teams. 
+● Delayed project timelines, particularly when simultaneous work is required across multiple 
+stages. 
+6. Lack of Transparency in Decision-Making: 
+Transparent decision-making is critical to ensuring drug safety and efficacy, but current systems fail to 
+provide end-to-end visibility. This creates: 
+● Gaps in information that delay or complicate approvals by regulatory officers and safety 
+inspectors. 
+● Inadequate  
+tools  for  
+analyzing  
+data  
+comprehensively,  
+hindering 
+ 
+informed decision-making. 
+● Increased risks of errors and oversights, particularly in the later stages of development. 
+ 
+ 
+ 
+ 
