@@ -315,15 +315,17 @@ elif selected_tab == "LLM Processing":
 
     # ✅ Reset stored values when the user changes the model or file
     if "prev_model" not in st.session_state:
-        st.session_state["prev_model"] = model
+    st.session_state["prev_model"] = model
 
     if "prev_file" not in st.session_state:
         st.session_state["prev_file"] = selected_markdown
+    
     if "prev_question" not in st.session_state:
         st.session_state["prev_question"] = ""
     
     if model != st.session_state["prev_model"]:
         st.session_state["summary"] = None  # Clear summary
+        st.session_state["answer"] = None  # Clear answer
         st.session_state["prev_model"] = model  # Update the tracking model
         st.rerun()
 
