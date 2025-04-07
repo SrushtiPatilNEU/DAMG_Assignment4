@@ -8,6 +8,20 @@ import matplotlib.pyplot as plt
 BASE_URL = "https://api-620400361669.us-central1.run.app"
 ##BASE_URL = "http://127.0.0.1:8000"
 
+# Initialize session state variables if they don't exist
+if "summary" not in st.session_state:
+    st.session_state["summary"] = None
+if "answer" not in st.session_state:
+    st.session_state["answer"] = None
+if "prev_model" not in st.session_state:
+    st.session_state["prev_model"] = None
+if "prev_file" not in st.session_state:
+    st.session_state["prev_file"] = None
+if "question" not in st.session_state:
+    st.session_state["question"] = ""
+if "prev_question" not in st.session_state:
+    st.session_state["prev_question"] = ""
+
 # Sidebar Navigation
 st.sidebar.title("Navigation")
 selected_tab = st.sidebar.radio("Go to", ["Extraction", "LLM Processing"])
@@ -100,13 +114,23 @@ elif selected_tab == "LLM Processing":
     else:
         st.error(" Failed to fetch processed Markdown files.")
         selected_markdown = None
+    
+    # Check if model or file has changed and reset if needed
+    if (model != st.session_state["prev_model"] and st.session_state["prev_model"] is not None) or \
+       (selected_markdown != st.session_state["prev_file"] and st.session_state["prev_file"] is not None):
+        st.session_state["summary"] = None
+        st.session_state["answer"] = None
+        st.session_state["question"] = ""
+        st.session_state["question_token_count"] = 0
+        st.session_state["summary_token_count"] = 0
+        st.session_state["answer_token_count"] = 0
+        st.session_state["pdf_token_count"] = 0
+    
+    # Update previous values
+    st.session_state["prev_model"] = model
+    st.session_state["prev_file"] = selected_markdown
         
     # 4️⃣ **Summarization Section**
-# ✅ Ensure session state has "summary" key
-    if "summary" not in st.session_state:
-        st.session_state["summary"] = None
-
-# Summarization Section
     st.markdown("<h2 style='text-align: center; color: black;'>Summarization</h2>", unsafe_allow_html=True)
 
     if selected_markdown and st.button("Summarize Document ", use_container_width=True):
@@ -141,20 +165,20 @@ elif selected_tab == "LLM Processing":
             st.error(f" Summarization request failed: {response.text}")
     
     
-# ✅ Display stored summary even after refresh
+    # ✅ Display stored summary even after refresh
     if st.session_state["summary"]:
         st.markdown("<h3 style='text-align: center; color: black;'>Summarization Result:</h3>", unsafe_allow_html=True)
         st.write(st.session_state["summary"])
-# ✅ Ensure session state has "answer" key
-    if "answer" not in st.session_state:
-        st.session_state["answer"] = None
 
     st.markdown("<h2 style='text-align: center; color: black;'>Ask a Question</h2>", unsafe_allow_html=True)
 
-# ✅ Use st.text_input() instead of st.text_area() so Enter submits automatically
-    question = st.text_input("Enter your question and press Enter:")
+    # Use text_input with key parameter to control its state
+    question = st.text_input("Enter your question and press Enter:", key="question_input", value=st.session_state.get("question", ""))
+    
+    # Keep track of the current question
+    st.session_state["question"] = question
 
-# ✅ Create an empty placeholder for answer display
+    # ✅ Create an empty placeholder for answer display
     answer_placeholder = st.empty()
     
     if selected_markdown and question and st.button("Get Answer 💡", use_container_width=True):
@@ -179,13 +203,12 @@ elif selected_tab == "LLM Processing":
         else:
             st.error(f" Failed to submit question request: {response.text}")
      
-     # ✅ Display stored answer without affecting summary
+    # ✅ Display stored answer without affecting summary
     if st.session_state["answer"]:
-
         answer_placeholder.write(st.session_state["answer"])
 
     if selected_markdown:
-    # Fetch the file content
+        # Fetch the file content
         file_response = requests.get(f"{BASE_URL}/download_markdown/{selected_markdown}")
 
         if file_response.status_code == 200:
@@ -196,11 +219,11 @@ elif selected_tab == "LLM Processing":
             st.session_state["pdf_token_count"] = 0
             st.error(" Failed to fetch file content.")
 
-# ✅ Display token count for the selected PDF
+    # ✅ Display token count for the selected PDF
     if "pdf_token_count" in st.session_state:
         st.markdown(f" **Token Count for Selected PDF**: {st.session_state['pdf_token_count']} tokens")
 
-# ✅ Display stored summary even after refresh
+    # ✅ Display stored summary even after refresh
     if st.session_state["summary"]:
         summary_token_count = count_tokens(st.session_state["summary"], model)  # ✅ Model-aware token count
         st.session_state["summary_token_count"] = summary_token_count
@@ -219,7 +242,7 @@ elif selected_tab == "LLM Processing":
         st.markdown(f" **Token Count for Answer**: {st.session_state['answer_token_count']} tokens")
 
     if selected_markdown and model:
-    # Fetch the file content only when both file and model are selected
+        # Fetch the file content only when both file and model are selected
         file_response = requests.get(f"{BASE_URL}/download_markdown/{selected_markdown}")
 
         if file_response.status_code == 200:
@@ -234,7 +257,6 @@ elif selected_tab == "LLM Processing":
         pdf_price = (st.session_state["pdf_token_count"] / 1_000_000) * MODEL_PRICING[model]["input_price"]
         st.markdown(f" **Cost for pdf:** ${pdf_price:.5f}")
 
-
     if question and model:
         question_token_count = count_tokens(question, model)  # ✅ Count question tokens per model
         st.session_state["question_token_count"] = question_token_count
@@ -248,7 +270,6 @@ elif selected_tab == "LLM Processing":
         st.session_state["summary_token_count"] = summary_token_count
         summary_price = (summary_token_count / 1_000_000) * MODEL_PRICING[model]["output_price"]
         st.markdown(f"**Cost for Summarisation:** ${summary_price:.5f}")
-
 
     if st.session_state["answer"]:
         answer_token_count = count_tokens(st.session_state["answer"], model)  # ✅ Count answer tokens per model
@@ -272,8 +293,6 @@ elif selected_tab == "LLM Processing":
         total_output_tokens = 0
         total_output_cost = 0
 
-    import pandas as pd  # Ensure pandas is imported
-
     if model and selected_markdown:  # ✅ Ensure both model and file are selected
         total_cost = total_input_cost + total_output_cost
 
@@ -295,7 +314,6 @@ elif selected_tab == "LLM Processing":
         st.markdown("### **Total Token Usage & Cost (Based on 1M Token Pricing)**")
         st.table(cost_data)
 
-
     # ✅ Create a bar chart for token usage
     if selected_markdown and model:
         fig, ax = plt.subplots(figsize=(8, 5))
@@ -312,33 +330,3 @@ elif selected_tab == "LLM Processing":
 
         # ✅ Display the chart in Streamlit
         st.pyplot(fig)
-
-    # ✅ Reset stored values when the user changes the model or file
-    if "prev_model" not in st.session_state:
-        st.session_state["prev_model"] = model
-
-    if "prev_file" not in st.session_state:
-        st.session_state["prev_file"] = selected_markdown
-    
-    if "prev_question" not in st.session_state:
-        st.session_state["prev_question"] = ""
-    
-    if model != st.session_state["prev_model"]:
-        st.session_state["summary"] = None  # Clear summary
-        st.session_state["answer"] = None  # Clear answer
-        st.session_state["prev_model"] = model  # Update the tracking model
-        st.rerun()
-
-    # ✅ If the user selects a new model or file, reset session state
-    if model != st.session_state["prev_model"] or selected_markdown != st.session_state["prev_file"] or st.session_state["prev_question"] != question:
-        
-        st.session_state["answer"] = None
-        st.session_state["question"] = ""
-        st.session_state["question_token_count"] = 0
-        st.session_state["summary_token_count"] = 0
-        st.session_state["answer_token_count"] = 0
-        st.session_state["pdf_token_count"] = 0
-        st.session_state["prev_model"] = model
-        st.session_state["prev_file"] = selected_markdown
-        st.session_state["prev_question"] = question
-        st.rerun() 
